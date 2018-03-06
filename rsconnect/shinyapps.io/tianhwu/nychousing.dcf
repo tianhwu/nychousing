@@ -1,0 +1,12 @@
+name: nychousing
+title: nychousing
+username:
+account: tianhwu
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 293822
+bundleId: 1254352
+url: https://tianhwu.shinyapps.io/nychousing/
+when: 1520309410.14201
+asMultiple: FALSE
+asStatic: FALSE
