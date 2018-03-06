@@ -16,9 +16,11 @@ library(leaflet)
 library(scales)
 
 
-
 df_residential <-
   as.data.table(readRDS("residential_small_03052018.rds"))
+
+#drop out broad channel and jamaica bay from dataset due to glitch on geojoin
+df_residential <- df_residential[!neighborhood %in% c("Broad Channel","Jamaica Bay")]
 
 #loads neighborhoods from nyc public dataset, kudos to the guy who made this tutorial that I learned from https://rpubs.com/jhofman/nycmaps
 rneighborhoods <-
@@ -38,7 +40,9 @@ ui <- fluidPage(fluidRow(
   column(
     8,
     align = "center",
-    titlePanel("NYC Median Residential Home Sales Price in 2017$")
+    titlePanel("NYC Housing Prices by Year & Neighborhood"),
+    textOutput("text"),
+    leafletOutput("map")
   ),
   column(
     4,
@@ -46,14 +50,15 @@ ui <- fluidPage(fluidRow(
     selectInput(
       "Year",
       
-      label = "Choose a year to display",
+      label = "Choose a year to investigate (2003 to 2017)",
+      selected = c(2013),
       choices = sort(unique(df_residential$year_of_sale), decreasing = TRUE)
     ),
     
     selectizeInput(
       "Neighborhood",
       
-      label = "Choose neighborhoods to display additional info for, delete and reselect using backspace",
+      label = "Choose neighborhoods to display additional info for and download raw data, delete and rechoose selections using backspace",
       
       #select a few neighborhoods I like to display more info in a table
       selected = c(
@@ -66,22 +71,21 @@ ui <- fluidPage(fluidRow(
         "Upper East Side",
         "Upper West Side",
         "Downtown Brooklyn",
-        "Boerum Hill"
+        "Boerum Hill",
+        "Bushwick",
+        "Sunnyside",
+        "Long Island City",
+        "Williamsburg"
+        
       ),
       choices = sort(unique(df_residential$neighborhood)),
       multiple = TRUE
-    )
-  )
-),
+    ),
+    downloadButton("downloadData", "Download Raw Data")
+  ),
+  tableOutput("table"))
+)
 
-
-#displays our map and table
-fluidRow(
-  column(8, align = "center",
-         leafletOutput("map")),
-  column(4, align = "center",
-         tableOutput("table"))
-))
 
 
 # Server logic ----
@@ -101,9 +105,6 @@ server <- function(input, output) {
     
     return(finaloutput)
   })
-  
-  
-  
   
   
   #renders our leaflet map
@@ -177,11 +178,42 @@ server <- function(input, output) {
     return(df)
   })
   
+  df_download <- reactive({
+    df <- df_residential
+    df <-df[neighborhood %in% input$Neighborhood & year_of_sale %in% input$Year, .(
+      neighborhood,
+      zip_code,
+      address,
+      sale_price,
+      year_of_sale,
+      year_built)]
+    df <- left_join(df, df_table())
+    return(df)
+  })
   
   
   #renders our table
   output$table <- renderTable(df_table())
+  
+  
+  output$downloadData <- downloadHandler(
+    filename = "nyc_residentialdata.csv",
+    content = function(file) {
+      write.csv(df_download(), file, row.names = FALSE)
+    }
+  )
+  
+  
+  output$text <- renderText({ 
+      paste(input$Year, " Median Residential Home Sales Price in 2017$")
+    })
+
+  
+  
 }
+
+
+
 
 
 # Run app ----
