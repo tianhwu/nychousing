@@ -5,8 +5,9 @@ account: tianhwu
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 293822
-bundleId: 1254466
+bundleId: 5391762
 url: https://tianhwu.shinyapps.io/nychousing/
-when: 1520316657.3028
+when: 1639963939.26681
+lastSyncTime: 1639963939.26681
 asMultiple: FALSE
 asStatic: FALSE
